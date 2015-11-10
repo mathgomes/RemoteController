@@ -4,6 +4,7 @@
 package camera;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
+import javafx.geometry.Pos;
 import javafx.stage.Stage;
 
 import java.io.ByteArrayInputStream;
@@ -34,6 +35,7 @@ import javafx.scene.paint.Color;
  */
 public class cameraTest extends Application {
 	
+	// Node ImageView to be added in the panel
 	private ImageView currentFrame = new ImageView();
 	// a timer for acquiring the video stream
 	private ScheduledExecutorService timer;
@@ -49,17 +51,17 @@ public class cameraTest extends Application {
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		
-		BorderPane basePane = new BorderPane();
-		camBox.getChildren().add(currentFrame);
-		basePane.setCenter(camBox);
-		basePane.setBottom(button);
+		GridPane basePane = new GridPane();
+		camBox.getChildren().addAll(currentFrame,button);
+		basePane.setAlignment(Pos.CENTER);
+		basePane.add(camBox,0,0);
 		
 		button.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
 			this.startCamera();
 		});
 		
-		Scene scene = new Scene(basePane,800,600);
-		scene.setFill(Color.BLACK);
+		Scene scene = new Scene(basePane,900,800);
+		scene.setFill(Color.BLACK);		// nao ta funcionando nao sei porque
 		primaryStage.setTitle("Camera Stream");
 		primaryStage.setScene(scene);
 		primaryStage.show();
@@ -73,25 +75,22 @@ public class cameraTest extends Application {
 			this.vCapture.open(0);
 			
 			// is the video stream available?
-			if (this.vCapture.isOpened())
-			{
+			if (this.vCapture.isOpened()) {
+				
 				this.cameraActive = true;
 				
 				// grab a frame every 33 ms (30 frames/sec)
 				Runnable frameGrabber = () -> {
-						
-						Image imageToShow = grabFrame();
-						currentFrame.setImage(imageToShow);
+					Image imageToShow = grabFrame();
+					currentFrame.setImage(imageToShow);
 				};
-				
 				this.timer = Executors.newSingleThreadScheduledExecutor();
 				this.timer.scheduleAtFixedRate(frameGrabber, 0, 33, TimeUnit.MILLISECONDS);
 				
 				// update the button content
 				this.button.setText("Stop Camera");
 			}
-			else
-			{
+			else {
 				// log the error
 				System.err.println("Impossible to open the camera connection...");
 			}
@@ -103,8 +102,7 @@ public class cameraTest extends Application {
 			this.button.setText("Start Camera");
 			
 			// stop the timer
-			try
-			{
+			try {
 				this.timer.shutdown();
 				this.timer.awaitTermination(33, TimeUnit.MILLISECONDS);
 			}
@@ -128,10 +126,9 @@ public class cameraTest extends Application {
 		Mat frame = new Mat();
 		
 		// check if the capture is open
-		if (this.vCapture.isOpened())
-		{
-			try
-			{
+		if (this.vCapture.isOpened()) {
+			
+			try {
 				// read the current frame
 				this.vCapture.read(frame);
 				
@@ -145,8 +142,7 @@ public class cameraTest extends Application {
 				}
 				
 			}
-			catch (Exception e)
-			{
+			catch (Exception e) {
 				// log the error
 				System.err.println("Exception during the image elaboration: " + e);
 			}
@@ -178,6 +174,5 @@ public class cameraTest extends Application {
 	public static void main(String[] args) {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		launch(args);
-
 	}
 }
